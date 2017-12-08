@@ -1,0 +1,5 @@
+.idea
+target
+*.iml
+spark-warehouse
+.git
