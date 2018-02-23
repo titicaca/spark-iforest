@@ -178,15 +178,15 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
         )
       }
     }
-    //TODO figure out why it doesn't work
-//    val iforest = new IForest()
-//    testEstimatorAndModelReadWrite(
-//      iforest,
-//      dataset,
-//      IForestSuite.allParamSettings,
-//      IForestSuite.allParamSettings,
-//      checkModelData
-//    )
+
+    val iforest = new IForest()
+    testEstimatorAndModelReadWrite(
+      iforest,
+      dataset,
+      IForestSuite.allParamSettings,
+      IForestSuite.allParamSettings,
+      checkModelData
+    )
   }
 
   test("boundary case") {
