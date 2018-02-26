@@ -2,7 +2,7 @@
 
 Isolation Forest (iForest) is an effective model that focuses on anomaly isolation. 
 iForest uses tree structure for modeling data, iTree isolates anomalies closer to the root of the tree as compared to normal points. 
-A anomaly score is calculated by iForest model to measure the abnormality of the data instances. The lower, the more abnormal.
+A anomaly score is calculated by iForest model to measure the abnormality of the data instances. The higher, the more abnormal.
 
 More details about iForest can be found in the following papers: 
 <a href="https://dl.acm.org/citation.cfm?id=1511387">Isolation Forest</a> [1] 

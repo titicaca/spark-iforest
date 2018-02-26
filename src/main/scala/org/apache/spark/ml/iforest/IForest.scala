@@ -299,7 +299,7 @@ object IForestModel extends MLReadable[IForestModel] {
   * the root of the tree as compared to normal points.
   *
   * A anomaly score is calculated by iForest model to measure the abnormality of the
-  * data instances. The lower, the more abnormal.
+  * data instances. The higher, the more abnormal.
   *
   * More details about iForest can be found in paper
   * <a href="https://dl.acm.org/citation.cfm?id=1511387">Isolation Forest</a>
