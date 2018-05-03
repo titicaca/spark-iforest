@@ -1,5 +1,7 @@
 # Spark-iForest
 [![Build Status](https://travis-ci.org/titicaca/spark-iforest.svg?branch=master)](https://travis-ci.org/titicaca/spark-iforest)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 
 Isolation Forest (iForest) is an effective model that focuses on anomaly isolation. 
 iForest uses tree structure for modeling data, iTree isolates anomalies closer to the root of the tree as compared to normal points. 
