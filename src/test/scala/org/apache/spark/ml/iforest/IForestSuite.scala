@@ -100,12 +100,14 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
         .setPredictionCol(predictionColName)
         .setAnomalyScoreCol(anomalyScoreName)
         .setContamination(0.2)
+        .setSeed(123L)
     val model = iforest.fit(dataset)
     assert(model.trees.length === 10)
 
     val summary = model.summary
     val anomalies = summary.anomalies.collect
     assert(anomalies.length === 10)
+    // TODO In Spark 2.3.x, function approxQuantile seems to be changed, numAnomalies might be not accurate.
     assert(summary.numAnomalies === 2)
 
     val transformed = model.transform(dataset)
