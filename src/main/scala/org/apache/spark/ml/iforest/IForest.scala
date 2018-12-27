@@ -11,6 +11,7 @@ import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util._
+import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
@@ -287,7 +288,7 @@ object IForestModel extends MLReadable[IForestModel] {
       val metadata = DefaultParamsReader.loadMetadata(path, sc, className)
       val trees = loadTreeNodes(path, sparkSession)
       val model = new IForestModel(metadata.uid, trees)
-      DefaultParamsReader.getAndSetParams(model, metadata)
+      metadata.getAndSetParams(model)
       model
     }
   }
@@ -471,15 +472,15 @@ class IForest (
     *                use VectorAssembler to generate a feature column.
     * @return trained iforest model with an array of each tree's root node.
     */
-  override def fit(dataset: Dataset[_]): IForestModel = {
+  override def fit(dataset: Dataset[_]): IForestModel = instrumented { instr =>
     transformSchema(dataset.schema, logging = true)
 
     val rddPerTree = splitData(dataset)
 
-    // add Instrumentation instance
-    val instr = Instrumentation.create(this, rddPerTree)
-    instr.logParams(numTrees, maxSamples, maxFeatures, maxDepth, contamination,
-      bootstrap, seed, featuresCol, predictionCol, labelCol)
+    instr.logPipelineStage(this)
+    instr.logDataset(dataset)
+    instr.logParams(this, numTrees, maxSamples, maxFeatures, maxDepth, contamination,
+          bootstrap, seed, featuresCol, predictionCol, labelCol)
 
     // Each iTree of the iForest will be built on parallel and collected in the driver.
     // Approximate memory usage for iForest model is calculated, a warning will be raised if iForest is too large.
@@ -520,7 +521,6 @@ class IForest (
       predictions, $(featuresCol), $(predictionCol), $(anomalyScoreCol)
     )
     model.setSummary(Some(summary))
-    instr.logSuccess(model)
     model
   }
 

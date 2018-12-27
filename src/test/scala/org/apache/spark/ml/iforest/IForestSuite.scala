@@ -36,7 +36,7 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
         .setNumTrees(10)
         .setMaxSamples(10)
         .setMaxFeatures(10)
-        .setMaxDepth(10)
+        .setMaxDepth(4)
         .setContamination(0.01)
         .setBootstrap(true)
         .setSeed(123L)
@@ -48,7 +48,7 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
     assert(iforest.getNumTrees === 10)
     assert(iforest.getMaxSamples === 10)
     assert(iforest.getMaxFeatures === 10)
-    assert(iforest.getMaxDepth === 10)
+    assert(iforest.getMaxDepth === 4)
     assert(iforest.getContamination === 0.01)
     assert(iforest.getBootstrap)
     assert(iforest.getSeed === 123L)
@@ -62,6 +62,7 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
     // test with bootsrap
     val iforest1 = new IForest()
         .setNumTrees(2)
+        .setMaxDepth(4)
         .setMaxSamples(1.0)
         .setMaxFeatures(1.0)
         .setBootstrap(false)
@@ -72,6 +73,7 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
     // test without bootstrap
     val iforest2 = new IForest()
         .setNumTrees(2)
+        .setMaxDepth(4)
         .setMaxSamples(1.0)
         .setMaxFeatures(1.0)
         .setBootstrap(true)
@@ -97,6 +99,7 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
     val anomalyScoreName = "test_anomalyScore"
     val iforest = new IForest()
         .setNumTrees(10)
+        .setMaxDepth(4)
         .setPredictionCol(predictionColName)
         .setAnomalyScoreCol(anomalyScoreName)
         .setContamination(0.2)
@@ -117,7 +120,7 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
   }
 
   test("copy estimator and model") {
-    val iforest1 = new IForest()
+    val iforest1 = new IForest().setMaxDepth(4)
     val iforest2 = iforest1.copy(ParamMap.empty)
     iforest1.params.foreach { p =>
       if (iforest1.isDefined(p)) {
@@ -255,7 +258,7 @@ object IForestSuite {
     "numTrees" -> 1,
     "maxSamples" -> 1.0,
     "maxFeatures" -> 1.0,
-    "maxDepth" -> 5,
+    "maxDepth" -> 3,
     "contamination" -> 0.2,
     "bootstrap" -> false
   )
