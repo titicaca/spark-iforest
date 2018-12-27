@@ -89,7 +89,7 @@ class IForestModel (
       Array(1 - $(contamination)), 0)
     // set anomaly instance label 1
     val predictUDF = udf { (anomalyScore: Double) =>
-      if (anomalyScore >= threshold(0)) 1.0 else 0.0
+      if (anomalyScore > threshold(0)) 1.0 else 0.0
     }
     scoreDataset.withColumn($(predictionCol), predictUDF(col($(anomalyScoreCol))))
   }
