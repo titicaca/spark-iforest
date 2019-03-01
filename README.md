@@ -23,6 +23,8 @@ It is implemented in the following steps:
 
 Spark iForest is designed and implemented easy to use. The usage is similar to the iForest sklearn implementation [3]. 
 
+In addition, pyspark package is also provided. More details and usage can be found in python folder.
+
 *Parameters:*
 
 - *numTrees:* The number of trees in the iforest model (>0).
@@ -46,7 +48,6 @@ If false, sampling without replacement is performed.
 - *featuresCol:* features column name, default "features".
 - *anomalyScoreCol:* Anomaly score column name, default "anomalyScore".
 - *predictionCol:* Prediction column name, default "prediction".
-
 
 
 ## Examples
@@ -174,6 +175,20 @@ Thanks for his great contribution. In addition, thanks for the supports of Disco
 
 If you encounter any bugs, feel free to submit an issue or pull request. Also you can email to:
 <a href="fangzhou.yang@hotmail.com">Yang, Fangzhou (fangzhou.yang@hotmail.com)</a>
+
+## Citation
+
+Please cite spark-iforest in your publications if it helped your research. Here is an example BibTeX entry:
+
+```
+@misc{titicacasparkiforest,
+  title={spark-iforest},
+  author={Yang, Fangzhou and contributors},
+  year={2018},
+  publisher={GitHub},
+  howpublished={\url{https://github.com/titicaca/spark-iforest}},
+}
+```
 
 ## References:
 
