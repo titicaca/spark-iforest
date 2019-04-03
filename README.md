@@ -117,35 +117,48 @@ df = spark.createDataFrame(data, ["features"])
 
 from pyspark_iforest.ml.iforest import *
 
+# Init an IForest Object
 iforest = IForest(contamination=0.3, maxDepth=2)
+
+# Fit on a given data frame
 model = iforest.fit(df)
 
+# Check if the model has summary or not, the newly trained model has the summary info
 model.hasSummary
 
+# Show model summary
 summary = model.summary
 
+# Show the number of anomalies
 summary.numAnomalies
 
+# Predict for a new data frame based on the fitted model
 transformed = model.transform(df)
 
+# Collect spark data frame into local df
 rows = transformed.collect()
 
 temp_path = tempfile.mkdtemp()
-
 iforest_path = temp_path + "/iforest"
 
+# Save the iforest estimator into the path
 iforest.save(iforest_path)
 
+# Load iforest estimator from a path
 loaded_iforest = IForest.load(iforest_path)
 
 model_path = temp_path + "/iforest_model"
 
+# Save the fitted model into the model path
 model.save(model_path)
 
+# Load a fitted model from a model path
 loaded_model = IForestModel.load(model_path)
 
+# The loaded model has no summary info
 loaded_model.hasSummary
 
+# Use the loaded model to predict a new data frame
 loaded_model.transform(df).show()
 ```
 
@@ -231,7 +244,7 @@ Please cite spark-iforest in your publications if it helped your research. Here 
 ```
 @misc{titicacasparkiforest,
   title={spark-iforest},
-  author={Yang, Fangzhou and contributors},
+  author={Fangzhou Yang and contributors},
   year={2018},
   publisher={GitHub},
   howpublished={\url{https://github.com/titicaca/spark-iforest}},
