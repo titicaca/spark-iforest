@@ -87,7 +87,7 @@ class IForestModel (
     val scoreDataset = dataset.withColumn($(anomalyScoreCol), scoreUDF(col($(featuresCol))))
     // get threshold value
     val threshold = scoreDataset.stat.approxQuantile($(anomalyScoreCol),
-      Array(1 - $(contamination)), 0)
+      Array(1 - $(contamination)), $(approxQuantileRelativeError))
     // set anomaly instance label 1
     val predictUDF = udf { (anomalyScore: Double) =>
       if (anomalyScore > threshold(0)) 1.0 else 0.0
@@ -328,7 +328,8 @@ class IForest (
     maxDepth -> 10,
     contamination -> 0.1,
     bootstrap -> false,
-    seed -> this.getClass.getName.hashCode.toLong
+    seed -> this.getClass.getName.hashCode.toLong,
+    approxQuantileRelativeError -> 0d
   )
 
   def this() = this(Identifiable.randomUID("IForest"))
@@ -366,6 +367,9 @@ class IForest (
 
   /** @group setParam */
   def setAnomalyScoreCol(value: String): this.type = set(anomalyScoreCol, value)
+
+  /** @group setParam */
+  def setApproxQuantileRelativeError(value: Double): this.type = set(approxQuantileRelativeError, value)
 
   override def copy(extra: ParamMap): IForest = defaultCopy(extra)
 
@@ -480,7 +484,7 @@ class IForest (
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, numTrees, maxSamples, maxFeatures, maxDepth, contamination,
-          bootstrap, seed, featuresCol, predictionCol, labelCol)
+      approxQuantileRelativeError, bootstrap, seed, featuresCol, predictionCol, labelCol)
 
     // Each iTree of the iForest will be built on parallel and collected in the driver.
     // Approximate memory usage for iForest model is calculated, a warning will be raised if iForest is too large.
@@ -704,9 +708,9 @@ trait IForestParams extends Params {
     * The proportion of outliers in the data set (0< contamination < 1).
     * It will be used in the prediction. In order to enhance performance,
     * Our method to get anomaly score threshold adopts DataFrameStsFunctions.approxQuantile,
-    * which is designed for performance with some extent accuracy loss. Note
-    * that this is an approximate quantiles computation, if you want an exactly
-    * answer, you can extract "anomalyScoreCol" to select your anomalies.
+    * which is designed for performance with some extent accuracy loss.
+    * Set the param approxQuantileRelativeError (0 < e < 1) to calculate
+    * an approximate quantile threshold of anomaly scores for large dataset.
     * @group param
     */
   final val contamination: DoubleParam =
@@ -715,6 +719,19 @@ trait IForestParams extends Params {
 
   /** @group getParam */
   def getContamination: Double = $(contamination)
+
+  /**
+    * Relative Error for Approximate Quantile (0 <= value <= 1),  default is 0.
+    * @group param
+    */
+  final val approxQuantileRelativeError: Param[Double] =
+    new Param[Double](parent = this, name ="approxQuantileRelativeError", doc = "relative error for approximate quantile")
+
+  /** @group setParam */
+  setDefault(approxQuantileRelativeError, value = 0d)
+
+  /** @group getParam */
+  final def getApproxQuantileRelativeError: Double = $(approxQuantileRelativeError)
 
   /**
     * If true, individual trees are fit on random subsets of the training data
@@ -730,7 +747,7 @@ trait IForestParams extends Params {
   def getBootstrap: Boolean = $(bootstrap)
 
   /**
-    * The seed used by the randam number generator.
+    * The seed used by the random number generator.
     * @group param
     */
   final val seed: LongParam = new LongParam(this, "seed", "random seed")

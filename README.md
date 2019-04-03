@@ -40,8 +40,10 @@ The default value will be about log2(numSamples).
 - *contamination:* The proportion of outliers in the data set, the value should be in (0, 1).
 It is only used in the prediction phase to convert anomaly score to predicted labels. 
 In order to enhance performance, Our method to get anomaly score threshold is caculated by approxQuantile.
-Note that this is an approximate quantiles computation, if you want an exactly answer,
-you can extract ”$anomalyScoreCol" to select your anomalies.
+You can set the param approxQuantileRelativeError greater than 0,
+in order to calculate an approximate quantile threshold of anomaly scores for large dataset.
+- *approxQuantileRelativeError:* Relative Error for Approximate Quantile Calculation (0 <= value <= 1),
+default is 0 for calculating the exact value, which would be expensive for large datasets.
 - *bootstrap:* If true, individual trees are fit on random subsets of the training data sampled with replacement.
 If false, sampling without replacement is performed.
 - *seed:* The seed used by the randam number generator.

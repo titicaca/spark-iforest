@@ -219,15 +219,19 @@ class IForest(JavaEstimator, HasFeaturesCol, HasPredictionCol, HasSeed, JavaMLWr
                       "If true, the training data sampled with replacement (boolean)",
                       typeConverter=TypeConverters.toBoolean)
 
+    approxQuantileRelativeError = Param(Params._dummy(), "approxQuantileRelativeError",
+                                        "Relative Error for anomaly score approximate quantile calculaion (0 <= e <= 1)",
+                                        typeConverter=TypeConverters.toFloat)
+
     @keyword_only
     def __init__(self, featuresCol="features", predictionCol="prediction", anomalyScore="anomalyScore",
                  numTrees=100, maxSamples=1.0, maxFeatures=1.0, maxDepth=10, contamination=0.1,
-                 bootstrap=False):
+                 bootstrap=False, approxQuantileRelativeError=0.):
 
         super(IForest, self).__init__()
         self._java_obj = self._new_java_obj("org.apache.spark.ml.iforest.IForest", self.uid)
         self._setDefault(numTrees=100, maxSamples=1.0, maxFeatures=1.0, maxDepth=10, contamination=0.1,
-                         bootstrap=False)
+                         bootstrap=False, approxQuantileRelativeError=0.)
         kwargs = self._input_kwargs
         self.setParams(**kwargs)
 
@@ -238,9 +242,9 @@ class IForest(JavaEstimator, HasFeaturesCol, HasPredictionCol, HasSeed, JavaMLWr
     @since("2.1.0")
     def setParams(self, featuresCol="features", predictionCol="prediction", anomalyScore="anomalyScore",
                   numTrees=100, maxSamples=1.0, maxFeatures=1.0, maxDepth=10, contamination=0.1,
-                  bootstrap=False):
+                  bootstrap=False, approxQuantileRelativeError=0.):
         """
-        Sets params for KMeans.
+        Sets params for IForest.
         """
         kwargs = self._input_kwargs
         return self._set(**kwargs)
@@ -328,3 +332,17 @@ class IForest(JavaEstimator, HasFeaturesCol, HasPredictionCol, HasSeed, JavaMLWr
         Gets the value of `bootstrap`
         """
         return self.getOrDefault(self.bootstrap)
+
+    @since("2.1.0")
+        def setApproxQuantileRelativeError(self, value):
+            """
+            Sets the value of :py:attr:`approxQuantileRelativeError`.
+            """
+            return self._set(approxQuantileRelativeError=value)
+
+    @since("2.1.0")
+    def getApproxQuantileRelativeError(self):
+        """
+        Gets the value of `approxQuantileRelativeError`
+        """
+        return self.getOrDefault(self.approxQuantileRelativeError)
