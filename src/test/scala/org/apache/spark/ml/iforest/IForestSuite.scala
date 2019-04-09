@@ -7,6 +7,8 @@ import org.apache.spark.ml.util.DefaultReadWriteTest
 import org.apache.spark.mllib.util.MLlibTestSparkContext
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
+import scala.util.Random
+
 
 class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with DefaultReadWriteTest {
 
@@ -84,14 +86,16 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
 
   test("sample features") {
     val data = IForestSuite.generateIVectorArray(4, 3)
-    val iforest = new IForest()
-    val sampleResult = iforest.sampleFeatures(data, 4)
+    val iforest = new IForest().setSeed(123456L)
+    val (sampleResult, featureIdxArr) = iforest.sampleFeatures(data, 4)
     assert(sampleResult.length === 4 && sampleResult(0).length === 3 &&
         sampleResult(1).length === 3 && sampleResult(2).length === 3)
+    assert(featureIdxArr.length === 3 && featureIdxArr(0) === 0 && featureIdxArr(1) === 1 && featureIdxArr(2) === 2)
 
-    val sampleResult2 = iforest.sampleFeatures(data, 2)
+    val (sampleResult2, featureIdxArr2) = iforest.sampleFeatures(data, 2)
     assert(sampleResult2.length === 4 && sampleResult2(0).length === 2 &&
         sampleResult2(1).length === 2 && sampleResult2(2).length === 2)
+    assert(featureIdxArr2.length === 2)
   }
 
   test("fit, transform and summary") {
@@ -103,9 +107,10 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
         .setPredictionCol(predictionColName)
         .setAnomalyScoreCol(anomalyScoreName)
         .setContamination(0.2)
+        .setMaxFeatures(0.5)
         .setSeed(123L)
     val model = iforest.fit(dataset)
-    assert(model.trees.length === 10)
+      assert(model.trees.length === 10)
 
     val summary = model.summary
     val anomalies = summary.anomalies.collect
@@ -248,9 +253,10 @@ object IForestSuite {
     spark.createDataFrame(sc.parallelize(data))
   }
 
-  def generateIVectorArray(row: Int, col: Int): Array[Vector] = {
+  def generateIVectorArray(row: Int, col: Int, seed: Long = 100L): Array[Vector] = {
+    val rand = new Random(seed)
     Array.tabulate(row) { i =>
-      Vectors.dense(Array.fill(col)(i.toDouble))
+      Vectors.dense(Array.fill(col)(i.toDouble * rand.nextInt(10)))
     }
   }
 
