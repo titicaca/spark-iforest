@@ -334,11 +334,11 @@ class IForest(JavaEstimator, HasFeaturesCol, HasPredictionCol, HasSeed, JavaMLWr
         return self.getOrDefault(self.bootstrap)
 
     @since("2.1.0")
-        def setApproxQuantileRelativeError(self, value):
-            """
-            Sets the value of :py:attr:`approxQuantileRelativeError`.
-            """
-            return self._set(approxQuantileRelativeError=value)
+    def setApproxQuantileRelativeError(self, value):
+        """
+        Sets the value of :py:attr:`approxQuantileRelativeError`.
+        """
+        return self._set(approxQuantileRelativeError=value)
 
     @since("2.1.0")
     def getApproxQuantileRelativeError(self):
