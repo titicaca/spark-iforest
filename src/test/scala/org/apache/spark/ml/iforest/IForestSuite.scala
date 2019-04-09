@@ -110,7 +110,7 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
         .setMaxFeatures(0.5)
         .setSeed(123L)
     val model = iforest.fit(dataset)
-      assert(model.trees.length === 10)
+    assert(model.trees.length === 10)
 
     val summary = model.summary
     val anomalies = summary.anomalies.collect
