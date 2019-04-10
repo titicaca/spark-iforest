@@ -138,6 +138,21 @@ class IForestModel(JavaModel, JavaMLWritable, CustomizedJavaMLReadable):
             raise RuntimeError("No training summary available for this %s" %
                                self.__class__.__name__)
 
+    @property
+    @since("2.4.0")
+    def setThreshold(self, value):
+        """
+        Set the anomaly score threshold for prediction, 0 < value < 1 .
+        """
+        self._call_java("setThreshold", value)
+
+    @property
+    @since("2.4.0")
+    def getThreshold(self):
+        """
+        Get the anomaly score threshold for prediction, 0 < value < 1 .
+        """
+        return self._call_java("getThreshold")
 
 @inherit_doc
 class IForest(JavaEstimator, HasFeaturesCol, HasPredictionCol, HasSeed, JavaMLWritable, CustomizedJavaMLReadable):
