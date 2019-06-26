@@ -223,6 +223,9 @@ Spark-iForest is built on Spark 2.1.1 or later version.
 
 `mvn clean package`
 
+## Install python package pyspark-iforest
+See [pyspark-iforest](https://github.com/titicaca/spark-iforest/blob/master/python/README.md), only available for spark 2.4.0 or later.
+
 ## Licenses
 
 Spark-IForest is available under Apache Licenses 2.0.
