@@ -92,6 +92,15 @@ val pipeline = new Pipeline().setStages(Array(indexer, assembler, iForest))
 val model = pipeline.fit(dataset)
 val predictions = model.transform(dataset)
 
+// Save pipeline model
+model.write.overwrite().save("/tmp/iforest.model")
+
+// Load pipeline model
+val loadedPipelineModel = PipelineModel.load("/tmp/iforest.model")
+// Get loaded iforest model
+val loadedIforestModel = loadedPipelineModel.stages(2).asInstanceOf[IForestModel]
+println(s"The loaded iforest model has no summary: model.hasSummary = ${loadedIforestModel.hasSummary}")
+
 val binaryMetrics = new BinaryClassificationMetrics(
 predictions.select("prediction", "label").rdd.map {
 case Row(label: Double, ground: Double) => (label, ground)
@@ -105,6 +114,10 @@ println(s"The model's auc: ${binaryMetrics.areaUnderROC()}")
 
 *Python API*
 ```python
+from pyspark.ml.linalg import Vectors
+import tempfile
+
+
 spark = SparkSession \
         .builder.master("local[*]") \
         .appName("IForestExample") \

@@ -752,8 +752,8 @@ trait IForestParams extends Params {
     * Relative Error for Approximate Quantile (0 <= value <= 1),  default is 0.
     * @group param
     */
-  final val approxQuantileRelativeError: Param[Double] =
-    new Param[Double](parent = this, name ="approxQuantileRelativeError", doc = "relative error for approximate quantile")
+  final val approxQuantileRelativeError: DoubleParam =
+    new DoubleParam(parent = this, name ="approxQuantileRelativeError", doc = "relative error for approximate quantile")
 
   /** @group setParam */
   setDefault(approxQuantileRelativeError, value = 0d)
