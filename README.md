@@ -18,12 +18,33 @@ It is implemented in the following steps:
   Thus we can construct sampled paired RDD, where each row key is tree index and row value is a group of sampled data instances for a tree.
   1. Training and constructing each iTree on parallel via a map operation and collect all iTrees to construct a iForest model.
   1. Predict a new Dataset on parallel via a map operation with the collected iForest model.
+  
+
+## Install
+
+Step 1. Package spark-iforest jar and deploy it into spark lib
+
+```bash
+cd spark-iforest/
+
+mvn clean package -DskipTests
+
+cp target/spark-iforest-<version>.jar $SPARK_HOME/jars/
+```
+
+Step 2. Package pyspark-iforest and install it via pip, skip this step if you don't need the python pkg
+
+```bash
+cd spark-iforest/python
+
+python setup.py sdist
+
+pip install dist/pyspark-iforest-<version>.tar.gz
+```
 
 ## Usage
 
 Spark iForest is designed and implemented easy to use. The usage is similar to the iForest sklearn implementation [3]. 
-
-In addition, pyspark package is also provided. More details and usage can be found in python folder.
 
 *Parameters:*
 
@@ -230,14 +251,7 @@ The memory is set 1G per executor on Spark. The number of cores are range from 1
 
 ## Requirements
 
-Spark-iForest is built on Spark 2.1.1 or later version.
-
-## Build From Source
-
-`mvn clean package`
-
-## Install python package pyspark-iforest
-See [pyspark-iforest](https://github.com/titicaca/spark-iforest/blob/master/python/README.md), only available for spark 2.4.0 or later.
+Spark-iForest is built on Spark 2.4.0 or later version.
 
 ## Licenses
 
