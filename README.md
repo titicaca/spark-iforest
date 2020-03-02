@@ -147,6 +147,7 @@ spark = SparkSession \
 data = [(Vectors.dense([0.0, 0.0]),), (Vectors.dense([7.0, 9.0]),),
         (Vectors.dense([9.0, 8.0]),), (Vectors.dense([8.0, 9.0]),)]
 
+# NOTE: features need to be dense vectors for the model input
 df = spark.createDataFrame(data, ["features"])
 
 from pyspark_iforest.ml.iforest import *
