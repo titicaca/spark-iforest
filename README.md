@@ -53,6 +53,7 @@ Spark iForest is designed and implemented easy to use. The usage is similar to t
 If maxSamples <= 1, the algorithm will draw maxSamples * totalSample samples.
 If maxSamples > 1, the algorithm will draw maxSamples samples.
 The total memory is about maxSamples * numTrees * 4 + maxSamples * 8 bytes.
+**Note: The normFactor will be re-adjusted in the transform (predicton) function according to the size of the predicting dataset if maxSamples <= 1, which means the data instance with the same features may have different predictive scores for different size of dataset. Set a fixed maxSamples (maxSamples > 1), if you want a constant prediction scores in the transforming phase.**
 - *maxFeatures:* The number of features to draw from data to train each tree (>0).
 If maxFeatures <= 1, the algorithm will draw maxFeatures * totalFeatures features.
 If maxFeatures > 1, the algorithm will draw maxFeatures features.
