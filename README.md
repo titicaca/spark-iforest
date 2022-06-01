@@ -18,12 +18,33 @@ It is implemented in the following steps:
   Thus we can construct sampled paired RDD, where each row key is tree index and row value is a group of sampled data instances for a tree.
   1. Training and constructing each iTree on parallel via a map operation and collect all iTrees to construct a iForest model.
   1. Predict a new Dataset on parallel via a map operation with the collected iForest model.
+  
+
+## Install
+
+Step 1. Package spark-iforest jar and deploy it into spark lib
+
+```bash
+cd spark-iforest/
+
+mvn clean package -DskipTests
+
+cp target/spark-iforest-<version>.jar $SPARK_HOME/jars/
+```
+
+Step 2. Package pyspark-iforest and install it via pip, skip this step if you don't need the python pkg
+
+```bash
+cd spark-iforest/python
+
+python setup.py sdist
+
+pip install dist/pyspark-iforest-<version>.tar.gz
+```
 
 ## Usage
 
 Spark iForest is designed and implemented easy to use. The usage is similar to the iForest sklearn implementation [3]. 
-
-In addition, pyspark package is also provided. More details and usage can be found in python folder.
 
 *Parameters:*
 
@@ -32,6 +53,7 @@ In addition, pyspark package is also provided. More details and usage can be fou
 If maxSamples <= 1, the algorithm will draw maxSamples * totalSample samples.
 If maxSamples > 1, the algorithm will draw maxSamples samples.
 The total memory is about maxSamples * numTrees * 4 + maxSamples * 8 bytes.
+**Note: The normFactor will be re-adjusted in the transform (predicton) function according to the size of the predicting dataset if maxSamples <= 1, which means the data instance with the same features may have different predictive scores for different size of dataset. Set a fixed maxSamples (maxSamples > 1), if you want a constant prediction scores in the transforming phase.**
 - *maxFeatures:* The number of features to draw from data to train each tree (>0).
 If maxFeatures <= 1, the algorithm will draw maxFeatures * totalFeatures features.
 If maxFeatures > 1, the algorithm will draw maxFeatures features.
@@ -92,6 +114,15 @@ val pipeline = new Pipeline().setStages(Array(indexer, assembler, iForest))
 val model = pipeline.fit(dataset)
 val predictions = model.transform(dataset)
 
+// Save pipeline model
+model.write.overwrite().save("/tmp/iforest.model")
+
+// Load pipeline model
+val loadedPipelineModel = PipelineModel.load("/tmp/iforest.model")
+// Get loaded iforest model
+val loadedIforestModel = loadedPipelineModel.stages(2).asInstanceOf[IForestModel]
+println(s"The loaded iforest model has no summary: model.hasSummary = ${loadedIforestModel.hasSummary}")
+
 val binaryMetrics = new BinaryClassificationMetrics(
 predictions.select("prediction", "label").rdd.map {
 case Row(label: Double, ground: Double) => (label, ground)
@@ -105,6 +136,10 @@ println(s"The model's auc: ${binaryMetrics.areaUnderROC()}")
 
 *Python API*
 ```python
+from pyspark.ml.linalg import Vectors
+import tempfile
+
+
 spark = SparkSession \
         .builder.master("local[*]") \
         .appName("IForestExample") \
@@ -113,6 +148,7 @@ spark = SparkSession \
 data = [(Vectors.dense([0.0, 0.0]),), (Vectors.dense([7.0, 9.0]),),
         (Vectors.dense([9.0, 8.0]),), (Vectors.dense([8.0, 9.0]),)]
 
+# NOTE: features need to be dense vectors for the model input
 df = spark.createDataFrame(data, ["features"])
 
 from pyspark_iforest.ml.iforest import *
@@ -217,11 +253,7 @@ The memory is set 1G per executor on Spark. The number of cores are range from 1
 
 ## Requirements
 
-Spark-iForest is built on Spark 2.1.1 or later version.
-
-## Build From Source
-
-`mvn clean package`
+Spark-iForest is built on Spark 2.4.0 or later version.
 
 ## Licenses
 

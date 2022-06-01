@@ -1,6 +1,8 @@
 # PySpark-IForest
 
-Pyspark-iforest is a pyspark wrapper for spark-iforest. 
+Pyspark-iforest is a pyspark wrapper for spark-iforest.
+
+Note: it is available for spark version Spark-v2.4.x or later
 
 ## Install
 

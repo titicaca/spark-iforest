@@ -138,7 +138,6 @@ class IForestModel(JavaModel, JavaMLWritable, CustomizedJavaMLReadable):
             raise RuntimeError("No training summary available for this %s" %
                                self.__class__.__name__)
 
-    @property
     @since("2.4.0")
     def setThreshold(self, value):
         """
@@ -146,7 +145,6 @@ class IForestModel(JavaModel, JavaMLWritable, CustomizedJavaMLReadable):
         """
         self._call_java("setThreshold", value)
 
-    @property
     @since("2.4.0")
     def getThreshold(self):
         """

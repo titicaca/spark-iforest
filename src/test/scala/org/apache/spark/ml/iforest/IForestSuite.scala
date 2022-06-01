@@ -159,45 +159,45 @@ class IForestSuite extends SparkFunSuite with MLlibTestSparkContext with Default
     assert(model1.summary.anomalyScoreCol === model2.summary.anomalyScoreCol)
   }
 
-//  Uncomment the codes below to run the test for model read/write
-//  test("read/write") {
-//    def checkTreeNodes(node: IFNode, node2: IFNode): Unit = {
-//      (node, node2) match {
-//        case (node: IFInternalNode, node2: IFInternalNode) =>
-//          assert(node.featureValue === node2.featureValue)
-//          assert(node.featureIndex === node2.featureIndex)
-//          checkTreeNodes(node.leftChild, node2.leftChild)
-//          checkTreeNodes(node.rightChild, node2.rightChild)
-//        case (node: IFLeafNode, node2: IFLeafNode) =>
-//          assert(node.numInstance === node2.numInstance)
-//        case _ =>
-//          throw new AssertionError("Found mismatched nodes")
-//      }
-//    }
-//    def checkModelData(model: IForestModel, model2: IForestModel): Unit = {
-//      val trees = model.trees
-//      val trees2 = model2.trees
-//      assert(trees.length === trees2.length)
-//      try {
-//        trees.zip(trees2).foreach { case (node, node2) =>
-//          checkTreeNodes(node, node2)
-//        }
-//      } catch {
-//        case ex: Exception => throw new AssertionError(
-//          "checkModelData failed since the two trees were not identical.\n"
-//        )
-//      }
-//    }
-//
-//    val iforest = new IForest()
-//    testEstimatorAndModelReadWrite(
-//      iforest,
-//      dataset,
-//      IForestSuite.allParamSettings,
-//      IForestSuite.allParamSettings,
-//      checkModelData
-//    )
-//  }
+  // test for model read/write
+  test("read/write") {
+    def checkTreeNodes(node: IFNode, node2: IFNode): Unit = {
+      (node, node2) match {
+        case (node: IFInternalNode, node2: IFInternalNode) =>
+          assert(node.featureValue === node2.featureValue)
+          assert(node.featureIndex === node2.featureIndex)
+          checkTreeNodes(node.leftChild, node2.leftChild)
+          checkTreeNodes(node.rightChild, node2.rightChild)
+        case (node: IFLeafNode, node2: IFLeafNode) =>
+          assert(node.numInstance === node2.numInstance)
+        case _ =>
+          throw new AssertionError("Found mismatched nodes")
+      }
+    }
+    def checkModelData(model: IForestModel, model2: IForestModel): Unit = {
+      val trees = model.trees
+      val trees2 = model2.trees
+      assert(trees.length === trees2.length)
+      try {
+        trees.zip(trees2).foreach { case (node, node2) =>
+          checkTreeNodes(node, node2)
+        }
+      } catch {
+        case ex: Exception => throw new AssertionError(
+          "checkModelData failed since the two trees were not identical.\n"
+        )
+      }
+    }
+
+    val iforest = new IForest()
+    testEstimatorAndModelReadWrite(
+      iforest,
+      dataset,
+      IForestSuite.allParamSettings,
+      IForestSuite.allParamSettings,
+      checkModelData
+    )
+  }
 
   test("boundary case") {
     intercept[IllegalArgumentException] {
