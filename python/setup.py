@@ -34,7 +34,7 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     install_requires=[
-            'pyspark==2.4.0'
+            'pyspark==3.2.2'
         ],
     zip_safe=True,
 )
