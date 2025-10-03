@@ -416,28 +416,18 @@ class IForest (
       RandomGeneratorFactory.createRandomGenerator(new java.util.Random(rng.nextLong()))
     )
 
-
     val rddPerTree = {
 
-      // SampledIndices is a two-dimensional array, that generates sampling row indices in each iTree.
-      // E.g. [[1, 3, 6, 4], [6, 4, 2, 5]] indicates that the first tree has
-      // data consists of the 1, 3, 6, 4 row samples, the second tree has data
-      // consists of the 6, 4, 3, 5 row samples.
-      // if bootstrap is true, each array can stores the repeated row indices
-      // if false, each array contains different row indices, and each index is
-      // elected with the same probability using reservoir sample method.
-      // Note: sampleIndices will occupy about maxSamples * numTrees * 8
-      // byte memory in the driver.
+      // Sample row indices for each tree
       val sampleIndices = if ($(bootstrap)) {
-        Array.tabulate($(numTrees)) { i =>
+        Array.tabulate($(numTrees)) { _ =>
           Array.fill(possibleMaxSampels) {
             advancedRgn.nextLong(0, numSamples)
           }
         }
       } else {
-        Array.tabulate($(numTrees)) { i =>
-          reservoirSampleAndCount(Range.Long(0, numSamples, 1).iterator,
-            possibleMaxSampels, rng.nextLong)._1
+        Array.tabulate($(numTrees)) { _ =>
+          reservoirSampleAndCount(Range.Long(0, numSamples, 1).iterator, possibleMaxSampels, rng.nextLong)._1
         }
       }
 
@@ -450,16 +440,24 @@ class IForest (
       // E.g., Map{1 -> SparseVector(100, [1, 3, 5], [3, 6, 1])} means that there are 100
       // trees to construct a forest, and 3 copies of 1st row data trained on the 1 tree,
       // 6 copies trained on the 3rd tree and 1 copy trained on the 5th tree.
-      val rowInfo = sampleIndices.zipWithIndex.flatMap { case (indices: Array[Long], treeId: Int) =>
-        indices.map(rowIndex => (rowIndex, treeId))
-      }.groupBy(_._1).mapValues(x => x.map(_._2)).map {
-        case (rowIndex: Long, treeIdArray: Array[Int]) =>
-          val treeIdWithNumCopies = treeIdArray.map(treeId => (treeId, 1.0))
-              .groupBy(_._1).map { case (treeId: Int, tmp: Array[Tuple2[Int, Double]]) =>
-            tmp.reduce((x, y) => (treeId, x._2 + y._2))
-          }.toSeq
+      val rowInfo = sampleIndices.zipWithIndex
+        .flatMap { case (indices: Array[Long], treeId: Int) =>
+          indices.map(rowIndex => (rowIndex, treeId))
+        }
+        .groupBy(_._1)
+        .view
+        .mapValues(_.map(_._2).toArray)
+        .toMap
+        .map { case (rowIndex: Long, treeIdArray: Array[Int]) =>
+          val treeIdWithNumCopies = treeIdArray
+            .map(treeId => (treeId, 1.0))
+            .groupBy(_._1)
+            .map { case (treeId: Int, tmp: Array[(Int, Double)]) =>
+              tmp.reduce((x, y) => (treeId, x._2 + y._2))
+            }
+            .toSeq
           (rowIndex, Vectors.sparse($(numTrees), treeIdWithNumCopies))
-      }
+        }
 
       val broadRowInfo = dataset.sparkSession.sparkContext.broadcast(rowInfo)
 
@@ -468,17 +466,20 @@ class IForest (
       // Then for each row, get the number of copies in each tree, copy this point
       // to an array with corresponding tree id.
       // Finally reduce by the tree id key.
-      dataset.select(col($(featuresCol))).rdd.map {
-        case Row(point: Vector) => point
-      }.zipWithIndex().filter{ case (point: Vector, rowIndex: Long) =>
-        broadRowInfo.value.contains(rowIndex)
-      }.flatMap { case (point: Vector, rowIndex: Long) =>
-        val numCopiesInEachTree = broadRowInfo.value.get(rowIndex).get.asInstanceOf[SparseVector]
-        numCopiesInEachTree.indices.zip(numCopiesInEachTree.values).map {
-          case (treeId: Int, numCopies: Double) =>
-            (treeId, Array.fill(numCopies.toInt)(point))
+      dataset.select(col($(featuresCol))).rdd
+        .map { case Row(point: Vector) => point }
+        .zipWithIndex()
+        .filter { case (_, rowIndex: Long) =>
+          broadRowInfo.value.contains(rowIndex)
         }
-      }.reduceByKey((arr1, arr2) => arr1 ++ arr2)
+        .flatMap { case (point: Vector, rowIndex: Long) =>
+          val numCopiesInEachTree = broadRowInfo.value(rowIndex).asInstanceOf[SparseVector]
+          numCopiesInEachTree.indices.zip(numCopiesInEachTree.values).iterator.map {
+            case (treeId: Int, numCopies: Double) =>
+              (treeId, Array.fill(numCopies.toInt)(point))
+          }
+        }
+        .reduceByKey((arr1, arr2) => arr1 ++ arr2)
     }
     rddPerTree
   }
@@ -556,33 +557,40 @@ class IForest (
     *         featureIdxArr is an array stores the origin feature idx before the feature sampling
     */
   private[iforest] def sampleFeatures(
-      data: Array[Vector],
-      maxFeatures: Double,
-      random: Random = new Random()): (Array[Array[Double]], Array[Int]) = {
+                                       data: Array[Vector],
+                                       maxFeatures: Double,
+                                       random: Random = new Random()): (Array[Array[Double]], Array[Int]) = {
 
-    // get feature size
+    require(data.nonEmpty, "Input data array must not be empty")
+
+    // Number of features in each vector
     val numFeatures = data.head.size
-    // calculate the number of sampling features
+
+    // Determine number of features to sample
     val subFeatures: Int =
       if (maxFeatures <= 1) (maxFeatures * numFeatures).toInt
       else if (maxFeatures > numFeatures) {
         logger.warn("maxFeatures is larger than the numFeatures, using all features instead")
         numFeatures
-      }
-      else maxFeatures.toInt
+      } else maxFeatures.toInt
 
     if (subFeatures == numFeatures) {
-      (data.toArray.map(vector => vector.asInstanceOf[DenseVector].values), Array.range(0, numFeatures))
+      // No feature sampling — use all features
+      val allFeatures = data.map(_.asInstanceOf[DenseVector].values.clone())
+      (allFeatures, Array.range(0, numFeatures))
     } else {
-      // feature index for sampling features
-      val featureIdx = random.shuffle(0 to numFeatures - 1).take(subFeatures)
+      // Sample feature indices using Scala 2.13 collection API
+      val featureIdx = random.shuffle((0 until numFeatures).toList).take(subFeatures)
 
       val sampledFeatures = mutable.ArrayBuilder.make[Array[Double]]
-      data.foreach(vector => {
+      data.foreach { vector =>
         val sampledValues = new Array[Double](subFeatures)
-        featureIdx.zipWithIndex.foreach(elem => sampledValues(elem._2) = vector(elem._1))
+        featureIdx.zipWithIndex.foreach { case (featIdx, sampledIdx) =>
+          sampledValues(sampledIdx) = vector(featIdx)
+        }
         sampledFeatures += sampledValues
-      })
+      }
+
       (sampledFeatures.result(), featureIdx.toArray)
     }
   }
